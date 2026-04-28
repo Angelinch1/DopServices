@@ -1,0 +1,29 @@
+{
+  "name": "dopservices",
+  "version": "1.0.0",
+  "description": "Автотесты на Playwright (JavaScript) с архитектурой Page Object",
+  "private": true,
+  "scripts": {
+    "test": "playwright test --project=prod-chromium",
+    "test:stage": "playwright test --project=stage-chromium",
+    "test:prod": "playwright test --project=prod-chromium",
+    "test:all": "playwright test",
+    "test:headed": "playwright test --headed --project=stage-chromium",
+    "test:ui": "playwright test --ui --project=stage-chromium",
+    "test:debug": "playwright test --debug --project=stage-chromium",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report",
+    "allure:serve": "allure serve allure-results"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "page-object"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "allure-commandline": "^2.34.1",
+    "allure-playwright": "^3.7.0"
+  }
+}
