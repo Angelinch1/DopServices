@@ -1,11 +1,26 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
+const { testItReporter } = require('./config');
 
-/** Хост stage без завершающего слэша; пути в Page Object — относительные (/searchexcursions и т.д.). */
+/** Хост stage, пути в Page Object */
 const STAGE_BASE_URL =
   process.env.STAGE_BASE_URL || 'https://stage.fstravel.com';
-/** Прод: те же пути, другой хост (https://fstravel.com/...). */
+/** Хост prod, пути в Page Object */
 const PROD_BASE_URL = process.env.PROD_BASE_URL || 'https://fstravel.com';
+
+/**
+ * Воркеры: CI — 1; локально на Windows — 2 (реже spawn EBUSY при Chromium/Test IT);
+ * иначе — по умолчанию Playwright. Переопределение: `PW_WORKERS` (число) или CLI `--workers`.
+ */
+function resolveWorkers() {
+  if (process.env.PW_WORKERS !== undefined && process.env.PW_WORKERS !== '') {
+    const n = parseInt(process.env.PW_WORKERS, 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+  if (process.env.CI) return 1;
+  if (process.platform === 'win32') return 2;
+  return undefined;
+}
 
 /**
  * Конфигурация Playwright для проекта dopservices.
@@ -18,7 +33,7 @@ module.exports = defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: resolveWorkers(),
   reporter: [
     ['list'],
     [
@@ -35,6 +50,7 @@ module.exports = defineConfig({
         },
       },
     ],
+    testItReporter,
   ],
   use: {
     trace: 'off',

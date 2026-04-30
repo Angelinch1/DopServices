@@ -5,5 +5,5 @@
     "target": "ES2022",
     "moduleResolution": "node"
   },
-  "include": ["pages/**/*.js", "tests/**/*.js", "playwright.config.js"]
+  "include": ["pages/**/*.js", "tests/**/*.js", "playwright.config.js", "config.js"]
 }

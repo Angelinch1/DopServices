@@ -5,9 +5,12 @@
   "private": true,
   "scripts": {
     "test": "playwright test --project=prod-chromium",
+    "test:serial": "playwright test --project=prod-chromium --workers=1",
     "test:stage": "playwright test --project=stage-chromium",
+    "test:stage:serial": "playwright test --project=stage-chromium --workers=1",
     "test:prod": "playwright test --project=prod-chromium",
     "test:all": "playwright test",
+    "test:all:serial": "playwright test --workers=1",
     "test:headed": "playwright test --headed --project=prod-chromium",
     "test:ui": "playwright test --ui --project=stage-chromium",
     "test:debug": "playwright test --debug --project=stage-chromium",
@@ -23,7 +26,9 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@playwright/test": "^1.56.0",
+    "dotenv": "^16.4.5",
     "allure-commandline": "^2.34.1",
-    "allure-playwright": "^3.7.0"
+    "allure-playwright": "^3.7.0",
+    "testit-adapter-playwright": "^4.0.3-TMS-5.7"
   }
 }

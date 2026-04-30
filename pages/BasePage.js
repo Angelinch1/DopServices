@@ -1,5 +1,5 @@
 /**
- * Базовый класс для Page Object: общие действия и ожидания.
+ * Базовый класс для Page Object: общие действия со страницей.
  */
 class BasePage {
   /**
@@ -11,10 +11,6 @@ class BasePage {
 
   async goto(path = '') {
     await this.page.goto(path);
-  }
-
-  async waitForLoad() {
-    await this.page.waitForLoadState('networkidle');
   }
 }
 
