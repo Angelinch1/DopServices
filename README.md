@@ -99,6 +99,7 @@ npx playwright test tests/prod/excursions/fstravel-search-excursions.spec.js --p
 | Сертификаты | `/certificates` | `certificates/` | `certificates/` | `certificates/` |
 | Яхты | `/searchyachtrent` | `yachts/` | `yachts/` | `yachts/` |
 | Трансферы | `/searchtransfers` | `transfers/` | `transfers/` | `transfers/` |
+| Страхование | `/searchinsurances` | `insurances/` | `insurances/` | `insurances/` |
 | Услуги в аэропорту | `/searchairportservices` | `airport-services/` | `airport-services/` | `airport-services/` |
 | Услуги в отеле | `/searchhotelservices` | `hotel-services/` | `hotel-services/` | `hotel-services/` |
 
