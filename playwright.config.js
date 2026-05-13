@@ -55,7 +55,8 @@ module.exports = defineConfig({
   use: {
     trace: 'off',
     screenshot: 'off',
-    video: 'off',
+    /** Видео: по умолчанию выкл. Включить: `PW_VIDEO=on` или `retain-on-failure` (см. README Playwright). */
+    video: process.env.PW_VIDEO || 'off',
     locale: 'ru-RU',
   },
   projects: [

@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { FstravelAirportServicesPage } = require('../../../pages/airport-services/FstravelAirportServicesPage');
+const { FstravelAirportServicesPage } = require('../../../pages/AllPages');
 
 test.describe('fstravel — услуги в аэропорту (stage)', () => {
   test('страница услуг в аэропорту открывается', async ({ page }) => {

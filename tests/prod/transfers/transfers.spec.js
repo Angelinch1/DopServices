@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { FstravelTransfersPage } = require('../../../pages/transfers/FstravelTransfersPage');
+const { FstravelTransfersPage } = require('../../../pages/AllPages');
 
 test.describe('fstravel — трансферы (prod)', () => {
   test('страница поиска трансферов открывается', async ({ page }) => {

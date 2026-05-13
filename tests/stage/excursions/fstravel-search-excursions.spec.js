@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { FstravelSearchExcursionsPage } = require('../../../pages/excursions/FstravelSearchExcursionsPage');
+const { FstravelSearchExcursionsPage } = require('../../../pages/AllPages');
 
 test.describe('fstravel — поиск экскурсий (stage)', () => {
   test('страница поиска экскурсий открывается', async ({ page }) => {

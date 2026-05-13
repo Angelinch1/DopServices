@@ -1,6 +1,6 @@
 # DopServices
 
-Автотесты на **JavaScript** и **Playwright** с архитектурой **Page Object**. Отчётность: **Allure** и репортер **Test IT** (`config.js`); скриншоты, видео и trace Playwright отключены.
+Автотесты на **JavaScript** и **Playwright** с архитектурой **Page Object**. Отчётность: **Allure** и репортер **Test IT** (`config.js`); скриншоты и trace по умолчанию выключены; **видео** — через переменную **`PW_VIDEO`** (см. раздел «Команды запуска»).
 
 ## Требования
 
@@ -36,7 +36,7 @@ tests/
 | `stage-chromium`  | `tests/stage/**`  | `STAGE_BASE_URL` → stage   |
 | `prod-chromium`   | `tests/prod/**`   | `PROD_BASE_URL` → прод     |
 
-Page Object логично класть по разделу, например `pages/excursions/`. В коде используются **относительные пути** (`/searchexcursions`, `/certificates`, …): итоговый адрес на stage — **`https://stage.fstravel.com` + путь**, например `https://stage.fstravel.com/searchexcursions` (для prod — **`https://fstravel.com` + тот же путь**).
+Page Object для всех разделов собраны в **`pages/AllPages.js`** (константы путей и классы с `open()`). В коде используются **относительные пути** (`/searchexcursions`, `/certificates`, …): итоговый адрес на stage — **`https://stage.fstravel.com` + путь**, например `https://stage.fstravel.com/searchexcursions` (для prod — **`https://fstravel.com` + тот же путь**).
 
 Переопределение URL (PowerShell):
 
@@ -87,27 +87,38 @@ $env:STAGE_BASE_URL="https://ваш-stage.example"; $env:PROD_BASE_URL="https://
 npx playwright test tests/prod/excursions/fstravel-search-excursions.spec.js --project=prod-chromium
 ```
 
+**Видео прогона** (файл `video.webm` внутри `test-results/<папка-теста>/`): задайте значение Playwright для опции `video`, например `on` или `retain-on-failure` (только при падении). В `playwright.config.js` читается **`PW_VIDEO`** (подхватывается из `.env` через `config.js`).
+
+PowerShell:
+
+```powershell
+$env:PW_VIDEO='on'; npm run test:stage -- tests/stage/certificates/certificates.spec.js
+```
+
+**Смотреть браузер во время прогона** — флаг **`--headed`**, например: `npx playwright test ... --project=stage-chromium --headed` (или `npm run test:headed` для prod по скрипту в `package.json`).
+
 ## Браузер
 
 Только **Chromium** (в каждом из двух проектов).
 
 ## Разделы портала (пути от `baseURL`)
 
-| Раздел | Путь | `pages/` | `tests/stage/` | `tests/prod/` |
-|--------|------|----------|----------------|---------------|
-| Экскурсии | `/searchexcursions` | `excursions/` | `excursions/` | `excursions/` |
-| Сертификаты | `/certificates` | `certificates/` | `certificates/` | `certificates/` |
-| Яхты | `/searchyachtrent` | `yachts/` | `yachts/` | `yachts/` |
-| Трансферы | `/searchtransfers` | `transfers/` | `transfers/` | `transfers/` |
-| Страхование | `/searchinsurances` | `insurances/` | `insurances/` | `insurances/` |
-| Услуги в аэропорту | `/searchairportservices` | `airport-services/` | `airport-services/` | `airport-services/` |
-| Услуги в отеле | `/searchhotelservices` | `hotel-services/` | `hotel-services/` | `hotel-services/` |
+| Раздел | Путь | Класс в `pages/AllPages.js` | `tests/stage/` | `tests/prod/` |
+|--------|------|-----------------------------|----------------|---------------|
+| Экскурсии | `/searchexcursions` | `FstravelSearchExcursionsPage` | `excursions/` | `excursions/` |
+| Сертификаты | `/certificates` | `FstravelCertificatesPage` | `certificates/` | `certificates/` |
+| Яхты | `/searchyachtrent` | `FstravelYachtRentPage` | `yachts/` | `yachts/` |
+| Трансферы | `/searchtransfers` | `FstravelTransfersPage` | `transfers/` | `transfers/` |
+| Страхование | `/searchinsurances` | `FstravelSearchInsurancesPage` | `insurances/` | `insurances/` |
+| Услуги в аэропорту | `/searchairportservices` | `FstravelAirportServicesPage` | `airport-services/` | `airport-services/` |
+| Услуги в отеле | `/searchhotelservices` | `FstravelHotelServicesPage` | `hotel-services/` | `hotel-services/` |
 
 ## Структура проекта
 
 | Путь | Назначение |
 |------|------------|
-| `pages/<раздел>/` | Page Object по разделу сайта |
+| `pages/BasePage.js` | Базовый класс Page Object |
+| `pages/AllPages.js` | Пути и классы страниц по разделам сайта |
 | `tests/stage/<раздел>/` | Тесты для stage |
 | `tests/prod/<раздел>/` | Тесты для prod |
 | `playwright.config.js` | Проекты stage/prod и репортеры |
