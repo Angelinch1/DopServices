@@ -22,14 +22,23 @@ function resolveWorkers() {
   return undefined;
 }
 
+/** @returns {import('@playwright/test').VideoMode} */
+function resolveVideo() {
+  const mode = process.env.PW_VIDEO || 'off';
+  if (mode === 'on' || mode === 'off' || mode === 'retain-on-failure' || mode === 'on-first-retry') {
+    return mode;
+  }
+  return 'off';
+}
+
 /**
  * Конфигурация Playwright для проекта dopservices.
- * Тесты по средам: tests/stage/** и tests/prod/** (разделы сайта — подпапки).
+ * Тесты по средам: test/stage/** и test/prod/** (разделы сайта — подпапки)
  * @see https://playwright.dev/docs/test-projects
  * @see https://allurereport.org/docs/playwright/
  */
 module.exports = defineConfig({
-  testDir: './tests',
+  testDir: './test',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -56,7 +65,7 @@ module.exports = defineConfig({
     trace: 'off',
     screenshot: 'off',
     /** Видео: по умолчанию выкл. Включить: `PW_VIDEO=on` или `retain-on-failure` (см. README Playwright). */
-    video: process.env.PW_VIDEO || 'off',
+    video: resolveVideo(),
     locale: 'ru-RU',
   },
   projects: [
