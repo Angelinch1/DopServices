@@ -1,7 +1,4 @@
 {
-  "terminal.integrated.env.windows": {
-    "PATH": "${workspaceFolder}\\scripts\\win-npm-on-path;${env:PATH}"
-  },
   "terminal.integrated.defaultProfile.windows": "PowerShell (Bypass)",
   "terminal.integrated.profiles.windows": {
     "PowerShell (Bypass)": {
