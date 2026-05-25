@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
-const { SearchPage } = require('../../../pages/SearchPage');
+const { SearchPage } = require('../../pages/SearchPage');
 
-test.describe('fstravel — услуги в аэропорту (prod)', () => {
+test.describe('fstravel — услуги в аэропорту (stage)', () => {
   test('страница услуг в аэропорту открывается', async ({ page }) => {
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('airportServices');

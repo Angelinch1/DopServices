@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { SearchPage } = require('../../../pages/SearchPage');
+const { SearchPage } = require('../../pages/SearchPage');
 
 const pause = (page, ms = 1500) => page.waitForTimeout(ms);
 

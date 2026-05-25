@@ -1,44 +1,39 @@
 const { expect } = require('@playwright/test');
 const { BasePage } = require('./BasePage');
+const { BasketPage } = require('./BasketPage');
 const bookingUrls = require('../config/bookingUrls');
 
+/** Поиск туров / доп. услуг: форма страна–город–дата, выдача */
 class SearchPage extends BasePage {
-  constructor(page) {
-    super(page);
-    this._bannerHandlerInstalled = false;
+  /** Пауза между шагами (как раньше в проекте, дефолт 1500 ms) */
+  async pause(ms = 1500) {
+    await this._pause(ms);
   }
 
-  async pause(ms = 1500) {
+  async _pause(ms = 1000) {
     await this.page.waitForTimeout(ms);
   }
 
   /** @param {keyof typeof bookingUrls} section */
   async openBookingSection(section) {
-    const path = bookingUrls[section];
-    if (!path) throw new Error(`Неизвестный раздел: ${section}`);
-
-    await this.page.goto(path, { waitUntil: 'domcontentloaded' });
-    await this.dismissOverlays();
-
-    if (section === 'certificates') return;
-
-    await this.page.locator('.v-departure__pinput').first().waitFor({ state: 'visible', timeout: 15_000 });
-    await this.setupBannerHandler();
-    await this.closePopups();
+    const url = bookingUrls[section];
+    if (!url) throw new Error(`Неизвестный раздел: ${section}`);
+    await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+    const ready =
+      section === 'certificates'
+        ? this.page.locator('input#name.form__field').first()
+        : this.page.locator('.v-departure__pinput').first();
+    await ready.waitFor({ state: 'visible', timeout: 15_000 });
+    await this.ensureAutoCloseBanners();
+    await this.closeBanners();
   }
 
-  async setupBannerHandler() {
-    if (this._bannerHandlerInstalled) return;
-    this._bannerHandlerInstalled = true;
-    const banner = this.page.getByText('Будьте в курсе');
-    await this.page.addLocatorHandler(banner, () => this.closePopups());
-  }
-
-  async closePopups() {
-    const p = this.page;
-    await p.keyboard.press('Escape').catch(() => {});
-    await p.locator('button.close[data-dismiss="modal"]').click({ timeout: 1500 }).catch(() => {});
-    await p.getByRole('button', { name: /Нет,?\s*спасибо/i }).first().click({ timeout: 1000 }).catch(() => {});
+  /** Дождаться выдачи и закрыть баннеры */
+  async waitForSearchResults() {
+    await this.page.getByText(/найдено/i).waitFor({ state: 'visible', timeout: 15_000 });
+    await this._pause();
+    await this.closeSubscribeBanner({ waitForAppear: true });
+    await this.closeBanners();
   }
 
   async reloadSearchResults() {
@@ -48,20 +43,29 @@ class SearchPage extends BasePage {
     await this.page.getByText(/найдено/i).waitFor({ state: 'visible', timeout: 30_000 });
   }
 
+  /** Случайная карточка и добавление в корзину */
   async addRandomOfferToCart() {
+    await this.closeSubscribeBanner({ waitForAppear: false });
+
     let btns = this.page.locator('button.excursion-card__content-btn');
     if ((await btns.count()) === 0) {
       btns = this.page.frameLocator('iframe').first().locator('button.excursion-card__content-btn');
     }
     await btns.first().waitFor({ state: 'visible', timeout: 20_000 });
-
-    const i = Math.floor(Math.random() * (await btns.count()));
+    const n = await btns.count();
+    const i = Math.floor(Math.random() * n);
+    await btns.nth(i).scrollIntoViewIfNeeded();
     await btns.nth(i).click();
+    await this._pause();
 
     const modal = this.page.locator('.excursion-modal');
     await modal.waitFor({ state: 'visible', timeout: 20_000 });
-    await modal.locator('.excursion-modal-main__buttons .calendar__field-button').click();
-    await modal.locator('.calendar-popup').waitFor({ state: 'visible', timeout: 10_000 });
+    await this._pause();
+    await this.closeBanners();
+
+    const calendarBtn = modal.locator('.excursion-modal-main__buttons .calendar__field-button');
+    await this.closeBanners();
+    await calendarBtn.click({ force: true });
     await modal
       .locator('.calendar-popup__cell-case:not(.calendar-popup__cell-gray) span.calendar-popup__text')
       .first()
@@ -69,55 +73,65 @@ class SearchPage extends BasePage {
 
     const continueBtn = modal.getByRole('button', { name: 'Продолжить' });
     await expect(continueBtn).toBeEnabled({ timeout: 15_000 });
-
-    const [bookingTab] = await Promise.all([
-      this.page.context().waitForEvent('page', { timeout: 30_000 }),
-      continueBtn.click(),
-    ]);
-    await bookingTab.waitForURL(/\/booking/i, { timeout: 30_000 });
-    return bookingTab;
+    await this.closeBanners();
+    await this._pause();
+    return BasketPage.openInNewTab(this.page, () => continueBtn.click());
   }
 
   async selectCountry(country = 'Египет') {
     await this.page.locator('.v-departure__pinput').first().click();
-    await this.pause(1000);
+    await this._pause();
     await this.page.getByText(country, { exact: true }).click();
-    await this.pause();
+    await this._pause();
   }
 
   async selectCity(city = 'Шарм-эль-Шейх') {
     await this.page.locator('#city-excursions-field-input > .v-departure__pinput').click();
-    await this.pause(1000);
-    await this.closePopups();
+    await this._pause();
+    await this.closeBanners();
     await this.page.getByText(city, { exact: true }).last().click();
-    await this.pause();
+    await this._pause();
   }
 
-  async pickCalendarDate() {
-    const popup = this.page.locator('div.calendar-popup').first();
+  async _pickCalendarPopup() {
+    const popup = this.page.locator('motion.div.calendar-popup, div.calendar-popup').first();
     await popup.waitFor({ state: 'visible', timeout: 10_000 });
-    await popup.locator('.calendar-popup__arrow-right').click();
-    await popup.locator('.calendar-popup__arrow-right').click();
+    const nextMonth = popup.locator('.calendar-popup__arrow-right');
+    await nextMonth.click();
+    await nextMonth.click();
     await popup.locator('span.calendar-popup__text').first().click();
-    await this.pause();
+    await this._pause();
   }
 
   async excursionPickDate(dateLabel = 'Дата экскурсии') {
-    await this.page.locator('.calendar__field').filter({ hasText: dateLabel }).locator('.calendar__field-button').click();
-    await this.pause(1000);
-    await this.pickCalendarDate();
+    const dateField = this.page.locator('.calendar__field').filter({ hasText: dateLabel });
+    await dateField.locator('.calendar__field-button').click();
+    await this._pause();
+    await this._pickCalendarPopup();
   }
 
   async airportPickDate() {
-    await this.page.locator('.calendar__field').filter({ hasText: 'Даты поездки' }).locator('.calendar__field-button').click();
-    await this.pause(1000);
-    await this.pickCalendarDate();
+    const dateField = this.page.locator('.calendar__field').filter({ hasText: 'Даты поездки' });
+    await dateField.locator('.calendar__field-button').click();
+    await this._pause();
+    await this._pickCalendarPopup();
   }
 
-  async pickServiceDate() {
+  async hotelPickDate() {
     await this.page.getByText('Дата Выбрать').click();
-    await this.pause(1000);
-    await this.pickCalendarDate();
+    await this._pause();
+    await this._pickCalendarPopup();
+  }
+
+  async yachtPickDate() {
+    await this.page.getByText('Дата Выбрать').click();
+    await this._pause();
+    await this._pickCalendarPopup();
+  }
+
+  /** Услуги в отеле / аэропорту: поле «Дата Выбрать» */
+  async pickServiceDate() {
+    await this.hotelPickDate();
   }
 
   async clickSearch() {
@@ -137,8 +151,7 @@ class SearchPage extends BasePage {
   }
 
   async fillCertificateSenderRecipient(opts = {}) {
-    await this.dismissOverlays(4);
-    await this.closePopups();
+    await this.closeBanners();
 
     const senderName = opts.senderName ?? 'Иванов Иван Иванович';
     const receiverName = opts.receiverName ?? 'Петрова Анна Ивановна';
@@ -158,18 +171,18 @@ class SearchPage extends BasePage {
     await emails.nth(1).fill(email);
   }
 
-  /** Корзина открывается в новой вкладке с /booking в URL */
-  async clickAddCertificateToCartPopup() {
-    await this.closePopups();
+  /** «Добавить в корзину» на странице сертификата */
+  async clickAddToCart() {
+    await this.closeBanners();
     const addBtn = this.page.getByText('Добавить в корзину', { exact: true });
     await addBtn.scrollIntoViewIfNeeded();
+    return BasketPage.openInNewTab(this.page, () => addBtn.click());
+  }
 
-    const [cartPage] = await Promise.all([
-      this.page.waitForEvent('popup', { timeout: 45_000 }),
-      addBtn.click(),
-    ]);
-    await cartPage.waitForURL(/\/booking/i, { timeout: 45_000 });
-    return cartPage;
+  /** Как {@link clickAddToCart}, но возвращает `Page` для существующих тестов */
+  async clickAddCertificateToCartPopup() {
+    const basket = await this.clickAddToCart();
+    return basket.page;
   }
 }
 

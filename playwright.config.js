@@ -33,7 +33,7 @@ function resolveVideo() {
 
 /**
  * Конфигурация Playwright для проекта dopservices.
- * Тесты по средам: test/stage/** и test/prod/** (разделы сайта — подпапки)
+ * Тесты по средам: файлы в test/stage/*.spec.js и test/prod/*.spec.js
  * @see https://playwright.dev/docs/test-projects
  * @see https://allurereport.org/docs/playwright/
  */
