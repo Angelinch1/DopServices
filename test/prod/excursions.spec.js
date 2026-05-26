@@ -13,8 +13,8 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test.describe('Корзина не авторизованного пользователя', () => {
-    test('Корзина не авторизованного пользователя', async ({ page }) => {
+  test.describe('Корзина экскурсии не авторизованного пользователя', () => {
+    test('Корзина экскурсии не авторизованного пользователя', async ({ page }) => {
       test.setTimeout(120_000);
 
       const search = new SearchPage(page);
