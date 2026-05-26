@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { testit } = require('testit-adapter-playwright');
 const { SearchPage } = require('../../pages/SearchPage');
 const { AuthPage } = require('../../pages/AuthPage');
 
@@ -15,6 +16,9 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
 
   test.describe('Корзина не авторизованного пользователя', () => {
     test('Корзина не авторизованного пользователя', async ({ page }) => {
+      // связь автотеста с TestIt
+      testit.externalId('000');
+      testit.workItemIds(['000']);
       test.setTimeout(120_000);
 
       const search = new SearchPage(page);
@@ -63,6 +67,9 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
 
   test.describe('Валидация к полю выбора отеля', () => {
     test('Валидация к полю выбора отеля проживания на курорте', async ({ page }) => {
+      // связь автотеста с TestIt
+      testit.externalId('000');
+      testit.workItemIds(['000']);
       test.setTimeout(120_000);
 
       const validation = 'Укажите место, откуда Вас заберет гид';

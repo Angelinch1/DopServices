@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { testit } = require('testit-adapter-playwright');
 const { SearchPage } = require('../../pages/SearchPage');
 
 const pause = (page, ms = 1500) => page.waitForTimeout(ms);
@@ -15,6 +16,9 @@ test.describe('fstravel — сертификаты (prod)', () => {
   });
 
   test('добавление сертификата в корзину', async ({ page }) => {
+    // связь автотеста с TestIt
+    testit.externalId('000');
+    testit.workItemIds(['000']); 
     test.setTimeout(120_000);
 
     const searchPage = new SearchPage(page);
