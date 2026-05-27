@@ -7,7 +7,7 @@ const pause = (page, ms = 1500) => page.waitForTimeout(ms);
 test.describe('fstravel — сертификаты (prod)', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test('страница сертификатов открывается', async ({ page }) => {
+  test('Страница сертификатов открывается', async ({ page }) => {
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('certificates');
 
@@ -15,10 +15,10 @@ test.describe('fstravel — сертификаты (prod)', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('добавление сертификата в корзину', async ({ page }) => {
+  test('Добавление сертификата в корзину', async ({ page }) => {
     // связь автотеста с TestIt
-    testit.externalId('000');
-    testit.workItemIds(['000']); 
+    testit.externalId('08fb10e9-0d98-4f11-99e9-57d1e2574703');
+    testit.workItemIds(['bedc097b-9566-45a9-9a5f-00b38ac8153c']); 
     test.setTimeout(120_000);
 
     const searchPage = new SearchPage(page);
@@ -27,7 +27,7 @@ test.describe('fstravel — сертификаты (prod)', () => {
       await searchPage.openBookingSection('certificates');
       await expect(page).toHaveURL(/\/certificates/);
     });
-    await pause(page, 2000);
+    await pause(page, 1000);
 
     await test.step('Выбор номинала 10 ₽', async () => {
       await searchPage.selectCertificateNominalTenRubles();
@@ -37,7 +37,7 @@ test.describe('fstravel — сертификаты (prod)', () => {
     await test.step('Заполнение данных отправителя и получателя', async () => {
       await searchPage.fillCertificateSenderRecipient();
     });
-    await pause(page, 2000);
+    await pause(page, 1000);
 
     const cartPage = await test.step('Добавить в корзину', async () =>
       searchPage.clickAddCertificateToCartPopup());

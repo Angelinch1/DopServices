@@ -6,7 +6,10 @@ const { AuthPage } = require('../../pages/AuthPage');
 const pause = (page, ms = 1500) => page.waitForTimeout(ms);
 
 test.describe('fstravel — поиск экскурсий (prod)', () => {
-  test('Страница поиска экскурсий открывается', async ({ page }) => {
+  test('Страница поиска экскурсий', async ({ page }) => {
+    // связь автотеста с TestIt
+    testit.externalId('958574fb2b3bba1790177c0a52006332');
+    testit.workItemIds(['9b84744b-3d03-4814-8e0a-2f6e017a0309']);
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('excursions');
 
@@ -17,8 +20,8 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
   test.describe('Корзина не авторизованного пользователя', () => {
     test('Корзина не авторизованного пользователя', async ({ page }) => {
       // связь автотеста с TestIt
-      testit.externalId('000');
-      testit.workItemIds(['000']);
+      testit.externalId('634a907d9a9b76952051bf22ce070bce');
+      testit.workItemIds(['4b1159bb-d715-467a-afaa-457ed0059815']);
       test.setTimeout(120_000);
 
       const search = new SearchPage(page);
@@ -68,8 +71,8 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
   test.describe('Валидация к полю выбора отеля', () => {
     test('Валидация к полю выбора отеля проживания на курорте', async ({ page }) => {
       // связь автотеста с TestIt
-      testit.externalId('000');
-      testit.workItemIds(['000']);
+      testit.externalId('e2357a6a5d14c34a83904dc518dee06a');
+      testit.workItemIds(['2b53c03a-750f-48ab-97e9-a91c35c87067']);
       test.setTimeout(120_000);
 
       const validation = 'Укажите место, откуда Вас заберет гид';
