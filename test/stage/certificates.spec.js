@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { testit } = require('testit-adapter-playwright');
 const { SearchPage } = require('../../pages/SearchPage');
 
 const pause = (page, ms = 1500) => page.waitForTimeout(ms);
@@ -6,7 +7,10 @@ const pause = (page, ms = 1500) => page.waitForTimeout(ms);
 test.describe('fstravel — сертификаты (stage)', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test('страница сертификатов открывается', async ({ page }) => {
+  test('Страница сертификатов', async ({ page }) => {
+    // связь автотеста с TestIt
+    testit.externalId('000');
+    testit.workItemIds(['000']);
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('certificates');
 
@@ -14,7 +18,10 @@ test.describe('fstravel — сертификаты (stage)', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('добавление сертификата в корзину', async ({ page }) => {
+  test('Добавление сертификата в корзину', async ({ page }) => {
+     // связь автотеста с TestIt
+     testit.externalId('4f6340b6ca07231152850b07ba332ed7');
+     testit.workItemIds(['359ca421-8d40-4ab4-ae8f-24d1d280d95d']); 
     test.setTimeout(120_000);
 
     const searchPage = new SearchPage(page);
