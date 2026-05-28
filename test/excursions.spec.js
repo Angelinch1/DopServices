@@ -1,15 +1,16 @@
 const { test, expect } = require('@playwright/test');
 const { testit } = require('testit-adapter-playwright');
-const { SearchPage } = require('../../pages/SearchPage');
-const { AuthPage } = require('../../pages/AuthPage');
+const { SearchPage } = require('../pages/SearchPage');
+const { AuthPage } = require('../pages/AuthPage');
 
-const pause = (page, ms = 1500) => page.waitForTimeout(ms);
+const pause = (page, ms = 500) => page.waitForTimeout(ms);
 
-test.describe('fstravel — поиск экскурсий (prod)', () => {
+test.describe('fstravel — поиск экскурсий', () => {
   test('Страница поиска экскурсий', async ({ page }) => {
     // связь автотеста с TestIt
     testit.externalId('958574fb2b3bba1790177c0a52006332');
     testit.workItemIds(['9b84744b-3d03-4814-8e0a-2f6e017a0309']);
+    testit.displayName('Страница поиска экскурсий');
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('excursions');
 
@@ -22,6 +23,7 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
       // связь автотеста с TestIt
       testit.externalId('634a907d9a9b76952051bf22ce070bce');
       testit.workItemIds(['4b1159bb-d715-467a-afaa-457ed0059815']);
+      testit.displayName('Корзина не авторизованного пользователя');
       test.setTimeout(120_000);
 
       const search = new SearchPage(page);
@@ -73,6 +75,7 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
       // связь автотеста с TestIt
       testit.externalId('e2357a6a5d14c34a83904dc518dee06a');
       testit.workItemIds(['2b53c03a-750f-48ab-97e9-a91c35c87067']);
+      testit.displayName('Валидация к полю выбора отеля проживания на курорте');
       test.setTimeout(120_000);
 
       const validation = 'Укажите место, откуда Вас заберет гид';
@@ -110,15 +113,15 @@ test.describe('fstravel — поиск экскурсий (prod)', () => {
         await hotelField.scrollIntoViewIfNeeded();
         await expect(hotelField).toBeEnabled({ timeout: 10_000 });
         await hotelField.click({ force: true });
-        await pause(cart, 400);
+        await pause(cart, 300);
       };
 
       /** Список после клика может остаться открытым — тогда blur не убирает фокус с поля */
       const leaveHotelField = async () => {
         await cart.keyboard.press('Escape');
-        await pause(cart, 400);
-        await hotelField.blur();
         await pause(cart, 300);
+        await hotelField.blur();
+        await pause(cart, 250);
         await cart.getByText('Отель проживания на курорте', { exact: true }).click();
         await pause(cart);
       };

@@ -34,7 +34,7 @@ class BasketPage extends BasePage {
     await this._clickBookButton();
   }
 
-  async _pause(ms = 1000) {
+  async _pause(ms = 500) {
     await this.page.waitForTimeout(ms);
   }
 
@@ -66,7 +66,7 @@ class BasketPage extends BasePage {
   async expectBookingSuccessPage() {
     const header = this.page.locator('h4.bookingPay__header-text');
     await header.waitFor({ state: 'visible', timeout: 20_000 });
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(500);
   }
 
   async getBookingNumberFromPayHeader() {

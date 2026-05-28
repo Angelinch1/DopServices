@@ -3,7 +3,7 @@ const { BasePage } = require('./BasePage');
 const { getBasketTestCredentials } = require('../config/basketCredentials');
 
 class AuthPage extends BasePage {
-  async _pause(ms = 1000) {
+  async _pause(ms = 500) {
     await this.page.waitForTimeout(ms);
   }
 

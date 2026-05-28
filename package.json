@@ -4,17 +4,12 @@
   "description": "Автотесты на Playwright (JavaScript) с архитектурой Page Object",
   "private": true,
   "scripts": {
-    "test": "playwright test --project=prod-chromium",
-    "test:serial": "playwright test --project=prod-chromium --workers=1",
-    "test:stage": "playwright test --project=stage-chromium",
-    "test:stage:serial": "playwright test --project=stage-chromium --workers=1",
-    "test:prod": "playwright test --project=prod-chromium",
-    "test:all": "playwright test",
-    "test:all:serial": "playwright test --workers=1",
-    "test:headed": "playwright test --headed --workers=1 --project=prod-chromium",
-    "test:stage:headed": "playwright test --headed --workers=1 --project=stage-chromium",
-    "test:ui": "playwright test --ui --project=stage-chromium",
-    "test:debug": "playwright test --debug --project=stage-chromium",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:preprod": "BASE_URL=https://preprod.fstravel.com npx playwright test",
+    "test:prerelease": "BASE_URL=https://prerelease.fstravel.com npx playwright test",
+    "test:ui:preprod": "BASE_URL=https://preprod.fstravel.com npx playwright test --ui",
+    "test:ui:prerelease": "BASE_URL=https://prerelease.fstravel.com npx playwright test --ui",
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:serve": "allure serve allure-results"
@@ -27,9 +22,9 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@playwright/test": "^1.56.0",
-    "dotenv": "^16.4.5",
     "allure-commandline": "^2.34.1",
     "allure-playwright": "^3.7.0",
+    "dotenv": "^16.4.5",
     "testit-adapter-playwright": "^4.0.3-TMS-5.7"
   }
 }

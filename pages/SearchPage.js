@@ -3,32 +3,33 @@ const { BasePage } = require('./BasePage');
 const { BasketPage } = require('./BasketPage');
 const bookingUrls = require('../config/bookingUrls');
 
-/** Поиск туров / доп. услуг: форма страна–город–дата, выдача */
+/** Page Object: формы поиска и корзина доп. услуг (пути — config/bookingUrls.js) */
 class SearchPage extends BasePage {
-  /** Пауза между шагами (как раньше в проекте, дефолт 1500 ms) */
-  async pause(ms = 1500) {
-    await this._pause(ms);
-  }
-
-  async _pause(ms = 1000) {
+  /** Пауза между шагами */
+  async _pause(ms = 500) {
     await this.page.waitForTimeout(ms);
   }
 
-  /** @param {keyof typeof bookingUrls} section */
+  // Открытие раздела 
   async openBookingSection(section) {
     const url = bookingUrls[section];
     if (!url) throw new Error(`Неизвестный раздел: ${section}`);
+
     await this.page.goto(url, { waitUntil: 'domcontentloaded' });
-    const ready =
-      section === 'certificates'
-        ? this.page.locator('input#name.form__field').first()
-        : this.page.locator('.v-departure__pinput').first();
-    await ready.waitFor({ state: 'visible', timeout: 15_000 });
     await this.ensureAutoCloseBanners();
     await this.closeBanners();
+
+    const ready =
+      section === 'certificates'
+        ? 'input#name.form__field'
+        : section === 'transfers'
+          ? 'button.v-search-button, .v-search'
+          : '.v-departure__pinput';
+
+    await this.page.locator(ready).first().waitFor({ state: 'visible', timeout: 15_000 });
   }
 
-  /** Дождаться выдачи и закрыть баннеры */
+  /** Выдача после «Найти» (текст «найдено») */
   async waitForSearchResults() {
     await this.page.getByText(/найдено/i).waitFor({ state: 'visible', timeout: 15_000 });
     await this._pause();
@@ -36,14 +37,7 @@ class SearchPage extends BasePage {
     await this.closeBanners();
   }
 
-  async reloadSearchResults() {
-    await this.page.getByText(/найдено/i).waitFor({ state: 'visible', timeout: 30_000 });
-    await this.page.waitForTimeout(3000);
-    await this.page.reload();
-    await this.page.getByText(/найдено/i).waitFor({ state: 'visible', timeout: 30_000 });
-  }
-
-  /** Случайная карточка и добавление в корзину */
+  /** Случайная карточка → модалка → дата → корзина в новой вкладке */
   async addRandomOfferToCart() {
     await this.closeSubscribeBanner({ waitForAppear: false });
 
@@ -52,20 +46,17 @@ class SearchPage extends BasePage {
       btns = this.page.frameLocator('iframe').first().locator('button.excursion-card__content-btn');
     }
     await btns.first().waitFor({ state: 'visible', timeout: 20_000 });
-    const n = await btns.count();
-    const i = Math.floor(Math.random() * n);
+
+    const i = Math.floor(Math.random() * (await btns.count()));
     await btns.nth(i).scrollIntoViewIfNeeded();
     await btns.nth(i).click();
     await this._pause();
 
     const modal = this.page.locator('.excursion-modal');
     await modal.waitFor({ state: 'visible', timeout: 20_000 });
-    await this._pause();
     await this.closeBanners();
 
-    const calendarBtn = modal.locator('.excursion-modal-main__buttons .calendar__field-button');
-    await this.closeBanners();
-    await calendarBtn.click({ force: true });
+    await modal.locator('.excursion-modal-main__buttons .calendar__field-button').click({ force: true });
     await modal
       .locator('.calendar-popup__cell-case:not(.calendar-popup__cell-gray) span.calendar-popup__text')
       .first()
@@ -74,10 +65,10 @@ class SearchPage extends BasePage {
     const continueBtn = modal.getByRole('button', { name: 'Продолжить' });
     await expect(continueBtn).toBeEnabled({ timeout: 15_000 });
     await this.closeBanners();
-    await this._pause();
     return BasketPage.openInNewTab(this.page, () => continueBtn.click());
   }
 
+  /** Страна в форме поиска */
   async selectCountry(country = 'Египет') {
     await this.page.locator('.v-departure__pinput').first().click();
     await this._pause();
@@ -85,6 +76,7 @@ class SearchPage extends BasePage {
     await this._pause();
   }
 
+  /** Город в форме поиска */
   async selectCity(city = 'Шарм-эль-Шейх') {
     await this.page.locator('#city-excursions-field-input > .v-departure__pinput').click();
     await this._pause();
@@ -93,16 +85,17 @@ class SearchPage extends BasePage {
     await this._pause();
   }
 
+  /** Календарь: +2 месяца, первая доступная дата */
   async _pickCalendarPopup() {
     const popup = this.page.locator('motion.div.calendar-popup, div.calendar-popup').first();
     await popup.waitFor({ state: 'visible', timeout: 10_000 });
-    const nextMonth = popup.locator('.calendar-popup__arrow-right');
-    await nextMonth.click();
-    await nextMonth.click();
+    await popup.locator('.calendar-popup__arrow-right').click();
+    await popup.locator('.calendar-popup__arrow-right').click();
     await popup.locator('span.calendar-popup__text').first().click();
     await this._pause();
   }
 
+  /** Поле даты на форме экскурсий */
   async excursionPickDate(dateLabel = 'Дата экскурсии') {
     const dateField = this.page.locator('.calendar__field').filter({ hasText: dateLabel });
     await dateField.locator('.calendar__field-button').click();
@@ -110,37 +103,14 @@ class SearchPage extends BasePage {
     await this._pickCalendarPopup();
   }
 
-  async airportPickDate() {
-    const dateField = this.page.locator('.calendar__field').filter({ hasText: 'Даты поездки' });
-    await dateField.locator('.calendar__field-button').click();
-    await this._pause();
-    await this._pickCalendarPopup();
-  }
-
-  async hotelPickDate() {
-    await this.page.getByText('Дата Выбрать').click();
-    await this._pause();
-    await this._pickCalendarPopup();
-  }
-
-  async yachtPickDate() {
-    await this.page.getByText('Дата Выбрать').click();
-    await this._pause();
-    await this._pickCalendarPopup();
-  }
-
-  /** Услуги в отеле / аэропорту: поле «Дата Выбрать» */
-  async pickServiceDate() {
-    await this.hotelPickDate();
-  }
-
+  /** Кнопка «Найти» */
   async clickSearch() {
     await this.page.locator('button.v-search-button').click();
     await this.page.waitForLoadState('domcontentloaded');
   }
 
-  // Сертификаты
-
+  // ——— Сертификаты ———
+  /** Номинал 10 ₽ */
   async selectCertificateNominalTenRubles() {
     const names = this.page.locator('input#name.form__field').filter({ visible: true });
     await names.first().waitFor({ state: 'visible', timeout: 25_000 });
@@ -150,6 +120,7 @@ class SearchPage extends BasePage {
     await this.page.getByText(/10[\s\u202f]*₽/).first().click();
   }
 
+  /** Отправитель и получатель */
   async fillCertificateSenderRecipient(opts = {}) {
     await this.closeBanners();
 
@@ -171,7 +142,7 @@ class SearchPage extends BasePage {
     await emails.nth(1).fill(email);
   }
 
-  /** «Добавить в корзину» на странице сертификата */
+  /** «Добавить в корзину» → новая вкладка */
   async clickAddToCart() {
     await this.closeBanners();
     const addBtn = this.page.getByText('Добавить в корзину', { exact: true });
@@ -179,7 +150,6 @@ class SearchPage extends BasePage {
     return BasketPage.openInNewTab(this.page, () => addBtn.click());
   }
 
-  /** Как {@link clickAddToCart}, но возвращает `Page` для существующих тестов */
   async clickAddCertificateToCartPopup() {
     const basket = await this.clickAddToCart();
     return basket.page;

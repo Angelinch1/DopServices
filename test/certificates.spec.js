@@ -1,16 +1,18 @@
 const { test, expect } = require('@playwright/test');
 const { testit } = require('testit-adapter-playwright');
-const { SearchPage } = require('../../pages/SearchPage');
+const { SearchPage } = require('../pages/SearchPage');
 
-const pause = (page, ms = 1500) => page.waitForTimeout(ms);
+const pause = (page, ms = 500) => page.waitForTimeout(ms);
 
-test.describe('fstravel — сертификаты (stage)', () => {
+test.describe('fstravel — сертификаты', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('Страница сертификатов', async ({ page }) => {
     // связь автотеста с TestIt
-    testit.externalId('000');
-    testit.workItemIds(['000']);
+    testit.externalId('396bee689824a0cfd677e7e95b001be1');
+    //testit.workItemIds(['']);
+    testit.displayName('Страница сертификатов');
+
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('certificates');
 
@@ -19,9 +21,10 @@ test.describe('fstravel — сертификаты (stage)', () => {
   });
 
   test('Добавление сертификата в корзину', async ({ page }) => {
-     // связь автотеста с TestIt
-     testit.externalId('4f6340b6ca07231152850b07ba332ed7');
-     testit.workItemIds(['359ca421-8d40-4ab4-ae8f-24d1d280d95d']); 
+    // связь автотеста с TestIt
+    testit.externalId('08fb10e9-0d98-4f11-99e9-57d1e2574703');
+    testit.workItemIds(['bedc097b-9566-45a9-9a5f-00b38ac8153c']);
+    testit.displayName('Добавление сертификата в корзину');
     test.setTimeout(120_000);
 
     const searchPage = new SearchPage(page);
@@ -30,7 +33,7 @@ test.describe('fstravel — сертификаты (stage)', () => {
       await searchPage.openBookingSection('certificates');
       await expect(page).toHaveURL(/\/certificates/);
     });
-    await pause(page, 2000);
+    await pause(page);
 
     await test.step('Выбор номинала 10 ₽', async () => {
       await searchPage.selectCertificateNominalTenRubles();
@@ -40,7 +43,7 @@ test.describe('fstravel — сертификаты (stage)', () => {
     await test.step('Заполнение данных отправителя и получателя', async () => {
       await searchPage.fillCertificateSenderRecipient();
     });
-    await pause(page, 2000);
+    await pause(page);
 
     const cartPage = await test.step('Добавить в корзину', async () =>
       searchPage.clickAddCertificateToCartPopup());

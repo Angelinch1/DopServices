@@ -2,24 +2,21 @@
 const { defineConfig, devices } = require('@playwright/test');
 const { testItReporter } = require('./config');
 
-/** Хост stage, пути в Page Object */
-const STAGE_BASE_URL =
-  process.env.STAGE_BASE_URL || 'https://stage.fstravel.com';
-/** Хост prod, пути в Page Object */
-const PROD_BASE_URL = process.env.PROD_BASE_URL || 'https://fstravel.com';
+/** Базовый URL среды: `preprod` / `prerelease` или свой хост через `BASE_URL`. */
+const BASE_URL =
+  (process.env.BASE_URL && process.env.BASE_URL.trim()) ||
+  'https://preprod.fstravel.com';
 
 /**
- * Воркеры: CI — 1; локально на Windows — 2 (реже spawn EBUSY при Chromium/Test IT);
- * иначе — по умолчанию Playwright. Переопределение: `PW_WORKERS` (число) или CLI `--workers`.
+ * По умолчанию один воркер — тесты идут по очереди, стабильнее и проще лог.
+ * Переопределение: `PW_WORKERS` или CLI `--workers`.
  */
 function resolveWorkers() {
   if (process.env.PW_WORKERS !== undefined && process.env.PW_WORKERS !== '') {
     const n = parseInt(process.env.PW_WORKERS, 10);
     return Number.isFinite(n) && n > 0 ? n : 1;
   }
-  if (process.env.CI) return 1;
-  if (process.platform === 'win32') return 2;
-  return undefined;
+  return 1;
 }
 
 /** @returns {import('@playwright/test').VideoMode} */
@@ -33,13 +30,14 @@ function resolveVideo() {
 
 /**
  * Конфигурация Playwright для проекта dopservices.
- * Тесты по средам: файлы в test/stage/*.spec.js и test/prod/*.spec.js
+ * Среда задаётся переменной `BASE_URL` (скрипты `npm run test:preprod` / `test:prerelease`).
  * @see https://playwright.dev/docs/test-projects
  * @see https://allurereport.org/docs/playwright/
  */
 module.exports = defineConfig({
   testDir: './test',
-  fullyParallel: true,
+  timeout: 60_000,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: resolveWorkers(),
@@ -54,14 +52,14 @@ module.exports = defineConfig({
         environmentInfo: {
           os_platform: process.platform,
           node_version: process.version,
-          stage_base_url: STAGE_BASE_URL,
-          prod_base_url: PROD_BASE_URL,
+          base_url: BASE_URL,
         },
       },
     ],
     testItReporter,
   ],
   use: {
+    baseURL: BASE_URL,
     trace: 'off',
     screenshot: 'off',
     /** Видео: по умолчанию выкл. Включить: `PW_VIDEO=on` или `retain-on-failure` (см. README Playwright). */
@@ -70,19 +68,9 @@ module.exports = defineConfig({
   },
   projects: [
     {
-      name: 'stage-chromium',
-      testMatch: '**/stage/**/*.spec.js',
+      name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: STAGE_BASE_URL,
-      },
-    },
-    {
-      name: 'prod-chromium',
-      testMatch: '**/prod/**/*.spec.js',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: PROD_BASE_URL,
       },
     },
   ],

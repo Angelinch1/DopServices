@@ -14,38 +14,32 @@ npm install
 npx playwright install chromium
 ```
 
-## Среды (stage / prod) и разделы сайта
+## Среды (preprod / prerelease)
 
-Тесты разделены **по среде**; имя файла отражает раздел сайта:
+Все спеки лежат в **`test/*.spec.js`**. Хост задаётся переменной **`BASE_URL`**:
 
-```text
-test/
-  stage/                 ← только stage
-    *.spec.js
-  prod/                  ← только prod
-    *.spec.js
-```
+| URL по умолчанию в скриптах | Назначение |
+|----------------------------|------------|
+| `https://preprod.fstravel.com` | preprod |
+| `https://prerelease.fstravel.com` | prerelease |
 
-В `playwright.config.js` два **проекта**:
+Если **`BASE_URL` не задана** (например, просто `npx playwright test`), в **`playwright.config.js`** используется **`https://preprod.fstravel.com`**.
 
-| Проект            | Папка тестов      | baseURL (по умолчанию)     |
-|-------------------|-------------------|----------------------------|
-| `stage-chromium`  | `test/stage/**/*.spec.js` | `STAGE_BASE_URL` → stage   |
-| `prod-chromium`   | `test/prod/**/*.spec.js`  | `PROD_BASE_URL` → прод     |
+Page Object в **`pages/AllPages.js`** использует **относительные пути** (`/searchexcursions`, `/certificates`, …): итоговый адрес — **`BASE_URL` + путь**, например `https://preprod.fstravel.com/searchexcursions`.
 
-Page Object для всех разделов собраны в **`pages/AllPages.js`** (константы путей и классы с `open()`). В коде используются **относительные пути** (`/searchexcursions`, `/certificates`, …): итоговый адрес на stage — **`https://stage.fstravel.com` + путь**, например `https://stage.fstravel.com/searchexcursions` (для prod — **`https://fstravel.com` + тот же путь**).
-
-Переопределение URL (PowerShell):
+Переопределение вручную (PowerShell):
 
 ```powershell
-$env:STAGE_BASE_URL="https://ваш-stage.example"; $env:PROD_BASE_URL="https://fstravel.com"
+$env:BASE_URL="https://prerelease.fstravel.com"; npx playwright test
 ```
 
-Скопируйте `.env.example` в `.env` и задайте значения локально; в CI задавайте переменные в окружении job. Файл `.env` подхватывается при старте через **`dotenv` в `config.js`** (подключается из `playwright.config.js`).
+Скрипты **`npm run test:preprod`** / **`test:prerelease`** задают `BASE_URL` в стиле Unix (`VAR=value команда`). В **cmd.exe** так не работает — используйте **Git Bash**, **WSL**, или переменную в PowerShell, как выше.
+
+Скопируйте `.env.example` в `.env` и при необходимости задайте `BASE_URL` локально; в CI — переменные в окружении job. Файл `.env` подхватывается при старте через **`dotenv` в `config.js`** (подключается из `playwright.config.js`).
 
 ## Test IT (репортер)
 
-Репортер **`testit-adapter-playwright`** подключён в `playwright.config.js`, параметры собираются в **`config.js`**.
+Репортер **`testit-adapter-playwright`** всегда подключён в `playwright.config.js`, параметры собираются в **`config.js`**.
 
 В CI можно задавать **короткие имена**; если соответствующая переменная **`TMS_*` уже задана**, она не перезаписывается. Дублировать одно и то же в двух видах не обязательно (например, достаточно только `TMS_ADAPTER_MODE` или только `ADAPTER_MODE`).
 
@@ -65,45 +59,40 @@ $env:STAGE_BASE_URL="https://ваш-stage.example"; $env:PROD_BASE_URL="https://
 
 | Команда | Что делает |
 |---------|------------|
-| `npm test` | Все тесты **prod**, браузер **не** показывается |
-| `npm run test:prod` | То же, что `npm test` |
-| `npm run test:headed` | Все тесты **prod**, **окно браузера видно**, тесты идут **по одному** |
-| `npm run test:stage` | Все тесты **stage**, без окна |
-| `npm run test:stage:headed` | **stage**, окно браузера, по одному тесту |
-| `npm run test:serial` | **prod** без окна, по одному тесту |
-| `npm run test:stage:serial` | **stage** без окна, по одному тесту |
-| `npm run test:all` | **prod**, затем **stage** |
-| `npm run test:all:serial` | То же, по одному тесту |
-| `npm run test:ui` | Stage, UI Mode |
-| `npm run test:debug` | Stage, пошаговая отладка |
+| `npm test` | Все тесты, `BASE_URL` из `.env` или **preprod** по умолчанию в конфиге |
+| `npm run test:preprod` | Тесты против **https://preprod.fstravel.com** |
+| `npm run test:prerelease` | Тесты против **https://prerelease.fstravel.com** |
+| `npm run test:ui` | UI Mode, тот же `BASE_URL`, что и у `npm test` |
+| `npm run test:ui:preprod` | UI Mode на preprod |
+| `npm run test:ui:prerelease` | UI Mode на prerelease |
 
-**Один файл** (пример — экскурсии на prod):
+**Один файл** (пример — экскурсии):
 
 ```bash
-npm run test:headed -- test/prod/excursions.spec.js
+npm run test:preprod -- test/excursions.spec.js
 ```
 
-**PowerShell:** если ругается на `npm.ps1`, пишите **`npm.cmd`** вместо **`npm`** (например `npm.cmd run test:headed`).
+**PowerShell:** если ругается на **`npm.ps1`** или **`npx.ps1`** (политика выполнения / подпись), вызывайте **`npm.cmd`** и **`npx.cmd`** (например `npx.cmd playwright test`), либо используйте **cmd.exe** вместо PowerShell.
 
-В **CI** воркер один и так (`playwright.config.js`). Локально на Windows без `--workers=1` иногда бывает **2** воркера — для скрытого браузера это нормально; для **headed** в скрипте уже **всегда один**, чтобы не открывалось несколько окон сразу.
+**Параллельность:** по умолчанию **`workers: 1`** и **`fullyParallel: false`** — тесты выполняются **по одному**, в предсказуемом порядке. Параллельный прогон: **`PW_WORKERS=2`** или **`npx playwright test --workers=4`**.
 
 **Видео:** в `.env` задайте `PW_VIDEO=on` или `retain-on-failure` (см. `playwright.config.js`).
 
 ## Браузер
 
-Только **Chromium** (в каждом из двух проектов).
+Только **Chromium** (проект `chromium` в `playwright.config.js`).
 
 ## Разделы портала (пути от `baseURL`)
 
-| Раздел | Путь | Класс в `pages/AllPages.js` | `test/stage/` | `test/prod/` |
-|--------|------|-----------------------------|----------------|---------------|
-| Экскурсии | `/searchexcursions` | `FstravelSearchExcursionsPage` | `fstravel-search-excursions.spec.js` | `fstravel-search-excursions.spec.js` |
-| Сертификаты | `/certificates` | `FstravelCertificatesPage` | `certificates.spec.js` | `certificates.spec.js` |
-| Яхты | `/searchyachtrent` | `FstravelYachtRentPage` | `yacht-rent.spec.js` | `yacht-rent.spec.js` |
-| Трансферы | `/searchtransfers` | `FstravelTransfersPage` | `transfers.spec.js` | `transfers.spec.js` |
-| Страхование | `/searchinsurances` | `FstravelSearchInsurancesPage` | `insurances.spec.js` | `insurances.spec.js` |
-| Услуги в аэропорту | `/searchairportservices` | `FstravelAirportServicesPage` | `airport-services.spec.js` | `airport-services.spec.js` |
-| Услуги в отеле | `/searchhotelservices` | `FstravelHotelServicesPage` | `hotel-services.spec.js` | `hotel-services.spec.js` |
+| Раздел | Путь | Класс в `pages/AllPages.js` | Спека |
+|--------|------|-----------------------------|--------|
+| Экскурсии | `/searchexcursions` | `FstravelSearchExcursionsPage` | `excursions.spec.js` |
+| Сертификаты | `/certificates` | `FstravelCertificatesPage` | `certificates.spec.js` |
+| Яхты | `/searchyachtrent` | `FstravelYachtRentPage` | `yacht.spec.js` |
+| Трансферы | `/searchtransfers` | `FstravelTransfersPage` | `transfers.spec.js` |
+| Страхование | `/searchinsurances` | `FstravelSearchInsurancesPage` | `insurances.spec.js` |
+| Услуги в аэропорту | `/searchairportservices` | `FstravelAirportServicesPage` | `airport-services.spec.js` |
+| Услуги в отеле | `/searchhotelservices` | `FstravelHotelServicesPage` | `hotel-services.spec.js` |
 
 ## Структура проекта
 
@@ -111,9 +100,8 @@ npm run test:headed -- test/prod/excursions.spec.js
 |------|------------|
 | `pages/BasePage.js` | Базовый класс Page Object |
 | `pages/AllPages.js` | Пути и классы страниц по разделам сайта |
-| `test/stage/*.spec.js` | Тесты для stage |
-| `test/prod/*.spec.js` | Тесты для prod |
-| `playwright.config.js` | Проекты stage/prod и репортеры |
+| `test/*.spec.js` | E2E-тесты (среда через `BASE_URL`) |
+| `playwright.config.js` | `baseURL`, репортеры, проект Chromium |
 | `config.js` | Загрузка `.env`, маппинг переменных в `TMS_*`, репортер Test IT |
 | `allure-results/` | Сырые данные Allure |
 
