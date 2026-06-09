@@ -38,7 +38,7 @@ class SearchPage extends BasePage {
   }
 
   /** Случайная карточка → модалка → дата → корзина в новой вкладке */
-  async addRandomOfferToCart() {
+  async addRandomOfferToCart({ expectFlyAnimation = false } = {}) {
     await this.closeSubscribeBanner({ waitForAppear: false });
 
     let btns = this.page.locator('button.excursion-card__content-btn');
@@ -65,6 +65,20 @@ class SearchPage extends BasePage {
     const continueBtn = modal.getByRole('button', { name: 'Продолжить' });
     await expect(continueBtn).toBeEnabled({ timeout: 15_000 });
     await this.closeBanners();
+
+    if (expectFlyAnimation) {
+      const flyBall = this.page.locator('[class*="fly-to-cart"]').first();
+      const [cartPage] = await Promise.all([
+        this.page.context().waitForEvent('page', { timeout: 45_000 }),
+        (async () => {
+          await continueBtn.click();
+          await expect(flyBall).toBeVisible({ timeout: 10_000 });
+        })(),
+      ]);
+      await cartPage.waitForURL(/\/booking/i, { timeout: 45_000 });
+      return new BasketPage(cartPage);
+    }
+
     return BasketPage.openInNewTab(this.page, () => continueBtn.click());
   }
 

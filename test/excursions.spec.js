@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { testit } = require('testit-adapter-playwright');
 const { SearchPage } = require('../pages/SearchPage');
 const { AuthPage } = require('../pages/AuthPage');
+const { getBasketTestCredentials } = require('../config/basketCredentials');
 
 const pause = (page, ms = 500) => page.waitForTimeout(ms);
 
@@ -67,6 +68,67 @@ test.describe('fstravel — поиск экскурсий', () => {
           basket.page.getByText('Заполните данные по туристам', { exact: true }),
         ).toHaveCount(0);
       });
+    });
+  });
+
+  test('Анимация перехода в корзину на доп. услугах', async ({ page }) => {
+    // связь автотеста с TestIt
+    testit.externalId('189c9980-5cf9-4622-be56-68705ad4603b');
+    testit.workItemIds(['525221fa446b1f4b532ba8c1fc1123a7']);
+    testit.displayName('Анимация перехода в корзину на доп. услугах');
+    test.setTimeout(120_000);
+
+    const search = new SearchPage(page);
+    const { email, password } = getBasketTestCredentials();
+    let basket;
+
+    await test.step('Открыть страницу поиска экскурсий', async () => {
+      await search.openBookingSection('excursions');
+    });
+
+    await test.step('Авторизоваться', async () => {
+      await page.getByRole('img').nth(3).click();
+      await pause(page);
+      await page.locator("input[name='LoginInput.Email']").fill(email);
+      await page.locator("input[name='LoginInput.Password']").fill(password);
+      await page.locator("input[name='LoginInput.Password']").press('Enter');
+    });
+
+    await test.step('Выбрать страну', async () => {
+      await search.selectCountry('Египет');
+    });
+
+    await test.step('Выбрать город', async () => {
+      await search.selectCity('Шарм-эль-Шейх');
+    });
+
+    await test.step('Выбрать дату', async () => {
+      await search.excursionPickDate('Дата экскурсии');
+    });
+
+    await test.step('Нажать «Найти»', async () => {
+      await search.clickSearch();
+    });
+
+    await test.step('Дождаться выдачи', async () => {
+      await expect(page).toHaveURL(/searchexcursions/i);
+      await search.waitForSearchResults();
+    });
+
+    await test.step('Добавить в корзину предложение с услугой — анимация красного шарика', async () => {
+      basket = await search.addRandomOfferToCart({ expectFlyAnimation: true });
+    });
+
+    await test.step('Открылась корзина /booking', async () => {
+      await basket.expectCartVisible();
+    });
+
+    await test.step('Вернуться на страницу поиска', async () => {
+      await page.bringToFront();
+    });
+
+    await test.step('У иконки корзины отображается красная точка', async () => {
+      await expect(page.locator('a[href*="booking"] .dot, a[href*="booking"] .badge').first()).toBeVisible();
     });
   });
 
