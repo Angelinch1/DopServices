@@ -91,7 +91,7 @@ test.describe('fstravel — поиск экскурсий', () => {
       await pause(page);
       await page.locator("input[name='LoginInput.Email']").fill(email);
       await page.locator("input[name='LoginInput.Password']").fill(password);
-      await page.locator("input[name='LoginInput.Password']").press('Enter');
+       await page.locator("input[name='LoginInput.Password']").press('Enter');
     });
 
     await test.step('Выбрать страну', async () => {
