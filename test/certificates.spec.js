@@ -1,7 +1,10 @@
 const { test, expect } = require('@playwright/test');
-const { testit } = require('testit-adapter-playwright');
+//const { testit } = require('testit-adapter-playwright');
 const { SearchPage } = require('../pages/SearchPage');
-
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {number} [ms=500]
+ */
 const pause = (page, ms = 500) => page.waitForTimeout(ms);
 
 test.describe('fstravel — сертификаты', () => {
@@ -9,9 +12,9 @@ test.describe('fstravel — сертификаты', () => {
 
   test('Страница сертификатов', async ({ page }) => {
     // связь автотеста с TestIt
-    testit.externalId('396bee689824a0cfd677e7e95b001be1');
+    //testit.externalId('396bee689824a0cfd677e7e95b001be1');
     //testit.workItemIds(['']);
-    testit.displayName('Страница сертификатов');
+    //testit.displayName('Страница сертификатов');
 
     const searchPage = new SearchPage(page);
     await searchPage.openBookingSection('certificates');
@@ -22,10 +25,10 @@ test.describe('fstravel — сертификаты', () => {
 
   test('Добавление сертификата в корзину', async ({ page }) => {
     // связь автотеста с TestIt
-    testit.externalId('08fb10e9-0d98-4f11-99e9-57d1e2574703');
-    testit.workItemIds(['bedc097b-9566-45a9-9a5f-00b38ac8153c']);
-    testit.displayName('Добавление сертификата в корзину');
-    test.setTimeout(120_000);
+    //testit.externalId('08fb10e9-0d98-4f11-99e9-57d1e2574703');
+    //testit.workItemIds(['bedc097b-9566-45a9-9a5f-00b38ac8153c']);
+    //testit.displayName('Добавление сертификата в корзину');
+    //test.setTimeout(120_000);
 
     const searchPage = new SearchPage(page);
 

@@ -5,7 +5,7 @@ const { testItReporter } = require('./config');
 /** Базовый URL среды: `preprod` / `prerelease` или свой хост через `BASE_URL`. */
 const BASE_URL =
   (process.env.BASE_URL && process.env.BASE_URL.trim()) ||
-  'https://preprod.fstravel.com';
+  'https://fstravel.com/';
 
 /**
  * По умолчанию один воркер — тесты идут по очереди, стабильнее и проще лог.
@@ -56,7 +56,7 @@ module.exports = defineConfig({
         },
       },
     ],
-    testItReporter,
+    //testItReporter,
   ],
   use: {
     baseURL: BASE_URL,

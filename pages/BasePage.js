@@ -55,7 +55,10 @@ class BasePage {
     await closeBtn.click({ timeout: 2_000, force: true }).catch(() => {});
     await closeBtn.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => {});
   }
-
+/** 
+ * @param {import('@playwright/test').Locator} locator 
+ * @param {number} timeout 
+ */
   async _tryClick(locator, timeout = 1_500) {
     await locator.click({ timeout }).catch(() => {});
   }

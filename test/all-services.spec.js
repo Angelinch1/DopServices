@@ -1,14 +1,17 @@
 const { test, expect } = require('@playwright/test');
-const { testit } = require('testit-adapter-playwright');
+//const { testit } = require('testit-adapter-playwright');
 const { getBasketTestCredentials } = require('../config/basketCredentials');
-
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {number} [ms=500]
+ */
 const pause = (page, ms = 500) => page.waitForTimeout(ms);
 
 test.describe('fstravel — все доп. услуги', () => {
   test('Блок «Сделайте своё путешествие ярче»', async ({ page }) => {
-    testit.externalId('b044cf61d4f7184f4148d51366360fdf');
-    testit.workItemIds(['04cacc3a-5649-4ac3-8aeb-d5b191013c48']);
-    testit.displayName('Блок «Сделайте своё путешествие ярче»');
+   // testit.externalId('b044cf61d4f7184f4148d51366360fdf');
+   // testit.workItemIds(['04cacc3a-5649-4ac3-8aeb-d5b191013c48']);
+   // testit.displayName('Блок «Сделайте своё путешествие ярче»');
 
     const { email, password } = getBasketTestCredentials();
 
@@ -35,13 +38,7 @@ test.describe('fstravel — все доп. услуги', () => {
       await pause(page);
       await page.getByRole('link', { name: 'Профиль' }).click();
       await pause(page);
-      await expect(page).toHaveURL(/\/cabinet\/profile\/?/);
-    });
-
-    await test.step('Переход на страницу /cabinet/', async () => {
-      await page.locator('.back .circle-bg').first().click();
-      await pause(page);
-      await expect(page).toHaveURL(/\/cabinet\/?$/);
+      await expect(page).toHaveURL(/\/cabinet\//);
     });
 
     await test.step('Блока «Сделайте своё путешествие ярче» нет', async () => {

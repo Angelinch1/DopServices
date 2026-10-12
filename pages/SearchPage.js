@@ -11,6 +11,9 @@ class SearchPage extends BasePage {
   }
 
   // Открытие раздела 
+  /**
+   * @param {keyof typeof bookingUrls} section 
+   */
   async openBookingSection(section) {
     const url = bookingUrls[section];
     if (!url) throw new Error(`Неизвестный раздел: ${section}`);
@@ -135,6 +138,14 @@ class SearchPage extends BasePage {
   }
 
   /** Отправитель и получатель */
+  /**
+ * @param {{
+ *   senderName?: string,
+ *   receiverName?: string,
+ *   phone?: string,
+ *   email?: string
+ * }} [opts]
+ */
   async fillCertificateSenderRecipient(opts = {}) {
     await this.closeBanners();
 

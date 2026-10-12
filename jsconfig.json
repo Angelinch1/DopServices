@@ -3,7 +3,14 @@
     "checkJs": true,
     "module": "commonjs",
     "target": "ES2022",
-    "moduleResolution": "node"
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["pages/**/*.js", "test/**/*.js", "config/**/*.js", "playwright.config.js", "config.js"]
+  "include": [
+    "pages/**/*.js",
+    "test/**/*.js",
+    "config/**/*.js",
+    "playwright.config.js",
+    "config.js"
+  ]
 }
